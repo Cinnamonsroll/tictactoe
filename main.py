@@ -1,6 +1,6 @@
 import pygame
 import math
-from colors import Background, Black
+from colors import Background, Black, White
 from board import full_board, has_won
 from minimax import best_move
 pygame.init()
@@ -14,6 +14,8 @@ END_FONT = pygame.font.SysFont('courier', 40)
 screen.fill(Background)
 turn = 1
 grid = [[0] * ROWS for _ in range(ROWS)]
+running = True
+end_game = True
 def draw_grid():
     gap = WIDTH // ROWS
     x = 0
@@ -32,42 +34,47 @@ def on_click(grid):
              if dis < WIDTH // ROWS // 2 and grid[i][j] == 0:
                 grid[i][j] = turn
                 turn = 2
-                if not has_won(grid) or not full_board(grid):
+                if not has_won(grid) and not full_board(grid):
                     move = best_move(grid, turn)
                     grid[move["x"]][move["y"]] = turn
                     turn = 1
 def display_message(content):
-    pygame.time.delay(500)
     screen.fill(Background)
     end_text = END_FONT.render(content, 1, Black)
+    button_text = END_FONT.render("Restart", 1, White)
     screen.blit(end_text, ((WIDTH - end_text.get_width()) // 2, (WIDTH - end_text.get_height()) // 2))
+    pygame.draw.rect(screen, Black, [(WIDTH - button_text.get_width()) // 2, ((WIDTH - button_text.get_height()) // 2) + 50, button_text.get_width() + 20, button_text.get_height() + 10])
+    screen.blit(button_text, (((WIDTH - button_text.get_width()) // 2) + 10, ((WIDTH - button_text.get_height()) // 2) + 50))
     pygame.display.update()
-    pygame.time.delay(3000)
 def render():
     screen.fill(Background)
-    draw_grid()
-    for i in range(len(grid)):
-        for j in range(len(grid[i])):
-             position = grid[i][j]
-             images = [None, X_IMAGE, O_IMAGE]
-             if position > 0:
-                  IMAGE = images[position]
-                  x = (WIDTH // ROWS // 2) * (2 * i + 1)
-                  y = (WIDTH // ROWS // 2) * (2 * j + 1)
-                  screen.blit(IMAGE, (x - IMAGE.get_width() // 2, y - IMAGE.get_height() // 2))
-    pygame.display.update()
+    if end_game:
+        draw_grid()
+        for i in range(len(grid)):
+            for j in range(len(grid[i])):
+                position = grid[i][j]
+                images = [None, X_IMAGE, O_IMAGE]
+                if position > 0:
+                    IMAGE = images[position]
+                    x = (WIDTH // ROWS // 2) * (2 * i + 1)
+                    y = (WIDTH // ROWS // 2) * (2 * j + 1)
+                    screen.blit(IMAGE, (x - IMAGE.get_width() // 2, y - IMAGE.get_height() // 2))
+        pygame.display.update()
 
-running = True
 while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 on_click(grid)
-            
         render()
         if has_won(grid) or full_board(grid):
-            if has_won:
-                display_message(["O", "X"][turn] + " has won!")
+            if has_won(grid):
+                display_message(["X", "O"][turn] + " has won!")
+                end_game = False
+            elif full_board(grid):
+                display_message("Draw")
+                end_game = False
+                
 
 pygame.quit()
